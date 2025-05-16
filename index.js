@@ -6,8 +6,6 @@ const authRoutes = require('./routes/authRoutes');
 const bugRoutes = require('./routes/bugRoutes');
 const testCaseRoutes = require('./routes/testCaseRoutes');
 
-
-
 // Load environment variables
 dotenv.config();
 
@@ -22,7 +20,7 @@ app.use(cors({
   origin: ["http://localhost:3000", "https://caffetest.vercel.app"],
   credentials: true
 }));
-app.use(express.json());  // For parsing application/json
+app.use(express.json());
 
 // Health check route
 app.get('/', (req, res) => {
@@ -34,14 +32,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bugs', bugRoutes);
 app.use('/api/test-cases', testCaseRoutes);
 
-// Global error handler (optional but recommended)
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Start server
+// Start server with proper host and port
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
 });
