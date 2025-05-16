@@ -41,6 +41,11 @@ const bugSchema = new mongoose.Schema({
     required: true,
     enum: ['Open', 'In Progress', 'Resolved', 'Closed', 'Reopened']
   },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
   tab: { type: mongoose.Schema.Types.ObjectId, ref: 'Tab' }
 }, {
   timestamps: true

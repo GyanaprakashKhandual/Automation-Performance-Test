@@ -1,12 +1,20 @@
 const Bug = require('../models/Bug');
 const AutoIncrement = require('../utils/autoIncrement');
+
 // Create Bug
 exports.createBug = async (req, res) => {
   try {
-    const serialNumber = await AutoIncrement(req.user._id.toString());
+    const { companyId } = req.body;
+
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'Company ID is required' });
+    }
+
+    const serialNumber = await AutoIncrement(req.user._id.toString(), companyId); // Update autoIncrement logic if needed
 
     const bug = new Bug({
-      user: req.user._id.toString(),     // Make sure to save user id as string
+      user: req.user._id.toString(),
+      company: companyId,
       serialNumber,
       bugModule: req.body.bugModule,
       bugType: req.body.bugType,
@@ -33,12 +41,17 @@ exports.createBug = async (req, res) => {
   }
 };
 
-// Get All Bugs of Logged-in User
+// Get All Bugs of Logged-in User for a Company
 exports.getAllBugs = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { companyId } = req.query;
 
-    const bugs = await Bug.find({ user: userId }).sort({ serialNumber: 1 }).lean();
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'Company ID is required' });
+    }
+
+    const bugs = await Bug.find({ user: userId, company: companyId }).sort({ serialNumber: 1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -54,13 +67,18 @@ exports.getAllBugs = async (req, res) => {
   }
 };
 
-// Update Bug by serialNumber
+// Update Bug by serialNumber (scoped to user & company)
 exports.updateBug = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { companyId } = req.body;
+
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'Company ID is required' });
+    }
 
     const bug = await Bug.findOneAndUpdate(
-      { user: userId, serialNumber: req.params.serialNumber },
+      { user: userId, company: companyId, serialNumber: req.params.serialNumber },
       req.body,
       { new: true }
     );
@@ -86,13 +104,19 @@ exports.updateBug = async (req, res) => {
   }
 };
 
-// Delete Bug by serialNumber
+// Delete Bug by serialNumber (scoped to user & company)
 exports.deleteBug = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { companyId } = req.query;
+
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'Company ID is required' });
+    }
 
     const bug = await Bug.findOneAndDelete({
       user: userId,
+      company: companyId,
       serialNumber: req.params.serialNumber
     });
 
@@ -116,10 +140,15 @@ exports.deleteBug = async (req, res) => {
   }
 };
 
-// Get Filtered Bugs for Logged-in User
+// Get Filtered Bugs for Logged-in User and Company
 exports.getFilteredBugs = async (req, res) => {
   try {
     const userId = req.user._id.toString();
+    const { companyId } = req.query;
+
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'Company ID is required' });
+    }
 
     const {
       bugType,
@@ -130,7 +159,8 @@ exports.getFilteredBugs = async (req, res) => {
     } = req.query;
 
     const query = {
-      user: userId
+      user: userId,
+      company: companyId
     };
 
     if (bugType) query.bugType = { $in: Array.isArray(bugType) ? bugType : [bugType] };

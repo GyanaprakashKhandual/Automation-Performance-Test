@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const bugRoutes = require('./routes/bugRoutes');
 const testCaseRoutes = require('./routes/testCaseRoutes');
+const companyRoutes = require('./routes/companyRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/bugs', bugRoutes);
 app.use('/api/test-cases', testCaseRoutes);
+app.use('/api', companyRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
