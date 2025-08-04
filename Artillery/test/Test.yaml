@@ -1,0 +1,10 @@
+config:
+  target: "https://www.google.com"
+  phases:
+    - duration: 60   # Run for 60 seconds
+      arrivalRate: 10  # 10 users per second
+
+scenarios:
+  - flow:
+      - get:
+          url: "/"

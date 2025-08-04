@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Test Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .test-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #4285f4;
+        }
+
+        .test-info h2 {
+            color: #4285f4;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.2em;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 4px solid;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .metric-card.success { border-top-color: #28a745; }
+        .metric-card.primary { border-top-color: #4285f4; }
+        .metric-card.info { border-top-color: #17a2b8; }
+        .metric-card.warning { border-top-color: #ffc107; }
+
+        .metric-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .metric-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .metric-value {
+            font-size: 2.2em;
+            font-weight: 300;
+            color: #212529;
+            margin-bottom: 10px;
+        }
+
+        .metric-subtitle {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .phase-details {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .phase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .phase-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .phase-card:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .phase-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .phase-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .phase-stat {
+            font-size: 0.9em;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #212529;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-error { background-color: #dc3545; }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .metric-value {
+                font-size: 1.8em;
+            }
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .summary-stat {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .summary-stat-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .summary-stat-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Performance Test Report</h1>
+            <p>Comprehensive analysis of load testing results and system performance metrics</p>
+        </div>
+
+        <!-- Test Information -->
+        <div class="test-info">
+            <h2>Test Configuration</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Run ID</div>
+                    <div class="info-value">trwf9_7emtpr459zd9dwyb56chxzchd3t83_fgjc</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Duration</div>
+                    <div class="info-value">1 minute, 1 second</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Request Rate</div>
+                    <div class="info-value">10 req/sec</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Test Status</div>
+                    <div class="info-value">
+                        <span class="status-indicator status-success"></span>
+                        Completed Successfully
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card success">
+                <div class="metric-header">
+                    <div class="metric-title">Total Requests</div>
+                </div>
+                <div class="metric-value">600</div>
+                <div class="metric-subtitle">All requests completed successfully</div>
+            </div>
+
+            <div class="metric-card primary">
+                <div class="metric-header">
+                    <div class="metric-title">Average Response Time</div>
+                </div>
+                <div class="metric-value">181ms</div>
+                <div class="metric-subtitle">Median: 172.5ms</div>
+            </div>
+
+            <div class="metric-card info">
+                <div class="metric-header">
+                    <div class="metric-title">Success Rate</div>
+                </div>
+                <div class="metric-value">100%</div>
+                <div class="metric-subtitle">600/600 successful responses</div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="metric-header">
+                    <div class="metric-title">P95 Response Time</div>
+                </div>
+                <div class="metric-value">247ms</div>
+                <div class="metric-subtitle">95% of requests under 247ms</div>
+            </div>
+        </div>
+
+        <!-- Response Time Chart -->
+        <div class="chart-container">
+            <div class="chart-title">Response Time Distribution Across Phases</div>
+            <div class="chart-wrapper">
+                <canvas id="responseTimeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Request Rate Chart -->
+        <div class="chart-container">
+            <div class="chart-title">Request Rate and Throughput</div>
+            <div class="chart-wrapper">
+                <canvas id="throughputChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Response Time Summary -->
+        <div class="test-info">
+            <h2>Response Time Analysis</h2>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-value">156ms</div>
+                    <div class="summary-stat-label">Minimum</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">181ms</div>
+                    <div class="summary-stat-label">Average</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">172.5ms</div>
+                    <div class="summary-stat-label">Median</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">247ms</div>
+                    <div class="summary-stat-label">95th Percentile</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">296ms</div>
+                    <div class="summary-stat-label">99th Percentile</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">1061ms</div>
+                    <div class="summary-stat-label">Maximum</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase Details -->
+        <div class="phase-details">
+            <div class="chart-title">Phase-by-Phase Analysis</div>
+            <div class="phase-grid" id="phaseGrid">
+                <!-- Phases will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- User Session Analysis -->
+        <div class="test-info">
+            <h2>Virtual User Analysis</h2>
+            <div class="summary-stats">
+                <div class="summary-stat">
+                    <div class="summary-stat-value">600</div>
+                    <div class="summary-stat-label">Users Created</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">600</div>
+                    <div class="summary-stat-label">Users Completed</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">0</div>
+                    <div class="summary-stat-label">Failed Sessions</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value">319ms</div>
+                    <div class="summary-stat-label">Avg Session Length</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Performance test data
+        const testData = {
+            "summary": {
+                "http": {
+                    "codes": {"200": 600},
+                    "downloaded_bytes": 0,
+                    "request_rate": "10/sec",
+                    "requests": 600,
+                    "response_time": {
+                        "min": 156, "max": 1061, "mean": 181, "median": 172.5,
+                        "p95": 247.2, "p99": 295.9
+                    },
+                    "responses": 600
+                },
+                "vusers": {
+                    "completed": 600, "created": 600, "failed": 0,
+                    "session_length": {
+                        "min": 270, "max": 1230.7, "mean": 318.6, "median": 301.9,
+                        "p95": 424.2, "p99": 561.2
+                    }
+                }
+            },
+            "phases": [
+                {
+                    "duration": "6.269s", "time": "18:55:50(+0530)",
+                    "http": {
+                        "codes": {"200": 61}, "request_rate": "10/sec", "requests": 65,
+                        "response_time": {"min": 159, "max": 524, "mean": 181.3, "median": 169, "p95": 267.8, "p99": 415.8},
+                        "responses": 61
+                    },
+                    "vusers": {"completed": 61, "created": 65, "failed": 0}
+                },
+                {
+                    "duration": "9.939s", "time": "18:56:00(+0530)",
+                    "http": {
+                        "codes": {"200": 99}, "request_rate": "10/sec", "requests": 100,
+                        "response_time": {"min": 157, "max": 484, "mean": 177.4, "median": 169, "p95": 242.3, "p99": 267.8},
+                        "responses": 99
+                    },
+                    "vusers": {"completed": 99, "created": 100, "failed": 0}
+                },
+                {
+                    "duration": "9.952s", "time": "18:56:10(+0530)",
+                    "http": {
+                        "codes": {"200": 100}, "request_rate": "10/sec", "requests": 100,
+                        "response_time": {"min": 159, "max": 340, "mean": 179.2, "median": 172.5, "p95": 252.2, "p99": 290.1},
+                        "responses": 100
+                    },
+                    "vusers": {"completed": 100, "created": 100, "failed": 0}
+                },
+                {
+                    "duration": "9.957s", "time": "18:56:20(+0530)",
+                    "http": {
+                        "codes": {"200": 100}, "request_rate": "10/sec", "requests": 100,
+                        "response_time": {"min": 159, "max": 284, "mean": 182.9, "median": 172.5, "p95": 247.2, "p99": 284.3},
+                        "responses": 100
+                    },
+                    "vusers": {"completed": 100, "created": 100, "failed": 0}
+                },
+                {
+                    "duration": "9.972s", "time": "18:56:30(+0530)",
+                    "http": {
+                        "codes": {"200": 101}, "request_rate": "10/sec", "requests": 100,
+                        "response_time": {"min": 159, "max": 1061, "mean": 192.1, "median": 172.5, "p95": 257.3, "p99": 308},
+                        "responses": 101
+                    },
+                    "vusers": {"completed": 100, "created": 100, "failed": 0}
+                },
+                {
+                    "duration": "9.99s", "time": "18:56:40(+0530)",
+                    "http": {
+                        "codes": {"200": 100}, "request_rate": "10/sec", "requests": 100,
+                        "response_time": {"min": 156, "max": 261, "mean": 174.4, "median": 169, "p95": 186.8, "p99": 228.2},
+                        "responses": 100
+                    },
+                    "vusers": {"completed": 101, "created": 100, "failed": 0}
+                },
+                {
+                    "duration": "3.546s", "time": "18:56:50(+0530)",
+                    "http": {
+                        "codes": {"200": 39}, "request_rate": "13/sec", "requests": 35,
+                        "response_time": {"min": 161, "max": 295, "mean": 178, "median": 172.5, "p95": 206.5, "p99": 247.2},
+                        "responses": 39
+                    },
+                    "vusers": {"completed": 39, "created": 35, "failed": 0}
+                }
+            ]
+        };
+
+        // Create Response Time Chart
+        const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+        new Chart(responseTimeCtx, {
+            type: 'line',
+            data: {
+                labels: testData.phases.map((phase, index) => `Phase ${index + 1}`),
+                datasets: [
+                    {
+                        label: 'Average Response Time',
+                        data: testData.phases.map(phase => phase.http.response_time.mean),
+                        borderColor: '#4285f4',
+                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '95th Percentile',
+                        data: testData.phases.map(phase => phase.http.response_time.p95),
+                        borderColor: '#ea4335',
+                        backgroundColor: 'rgba(234, 67, 53, 0.1)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Median',
+                        data: testData.phases.map(phase => phase.http.response_time.median),
+                        borderColor: '#34a853',
+                        backgroundColor: 'rgba(52, 168, 83, 0.1)',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Response Time (ms)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Test Phases'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create Throughput Chart
+        const throughputCtx = document.getElementById('throughputChart').getContext('2d');
+        new Chart(throughputCtx, {
+            type: 'bar',
+            data: {
+                labels: testData.phases.map((phase, index) => `Phase ${index + 1}`),
+                datasets: [
+                    {
+                        label: 'Requests',
+                        data: testData.phases.map(phase => phase.http.requests),
+                        backgroundColor: 'rgba(66, 133, 244, 0.8)',
+                        borderColor: '#4285f4',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Successful Responses',
+                        data: testData.phases.map(phase => phase.http.responses),
+                        backgroundColor: 'rgba(52, 168, 83, 0.8)',
+                        borderColor: '#34a853',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Test Phases'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Populate Phase Details
+        const phaseGrid = document.getElementById('phaseGrid');
+        testData.phases.forEach((phase, index) => {
+            const phaseCard = document.createElement('div');
+            phaseCard.className = 'phase-card';
+            phaseCard.innerHTML = `
+                <div class="phase-title">Phase ${index + 1} - ${phase.time}</div>
+                <div class="phase-stats">
+                    <div class="phase-stat">
+                        <span class="stat-label">Duration:</span>
+                        <span class="stat-value">${phase.duration}</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Requests:</span>
+                        <span class="stat-value">${phase.http.requests}</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Success Rate:</span>
+                        <span class="stat-value">100%</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Avg Response:</span>
+                        <span class="stat-value">${phase.http.response_time.mean}ms</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Min Response:</span>
+                        <span class="stat-value">${phase.http.response_time.min}ms</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Max Response:</span>
+                        <span class="stat-value">${phase.http.response_time.max}ms</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Users Created:</span>
+                        <span class="stat-value">${phase.vusers.created}</span>
+                    </div>
+                    <div class="phase-stat">
+                        <span class="stat-label">Users Completed:</span>
+                        <span class="stat-value">${phase.vusers.completed}</span>
+                    </div>
+                </div>
+            `;
+            phaseGrid.appendChild(phaseCard);
+        });
+    </script>
+</body>
+</html>
