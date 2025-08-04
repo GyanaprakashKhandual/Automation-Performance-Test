@@ -1,4 +1,4 @@
-from locust import HttpUser, task, between
+from locust import HttpUser, task, between # type: ignore
 
 class GoogleUser(HttpUser):
     wait_time = between(1, 2)  # Optional: wait time between requests
